@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Build and Push Docker Image
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
     branches: [ "master" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -22,11 +22,10 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
-      - uses: actions/checkout@v4
+        run: mvn clean package -DskipTests
 
-      - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      - name: Copy JAR to build context
+        run: cp target/*.jar app.jar
 
-
-
+      - name: Build Docker image
+        run: docker build . -t my-image-name:latest
